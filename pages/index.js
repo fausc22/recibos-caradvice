@@ -182,20 +182,24 @@ export default function Home() {
 
       // Generar PDF VECTORIAL profesional
       const blob = await pdf(<ReciboPDF data={pdfData} />).toBlob();
-      
-      const receiptNumber = (nro || '000001').replace(/[^\d]/g, '').padStart(6, '0');
-      
-      // Descargar PDF
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `recibo_${receiptNumber}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
 
-      console.log('✅ PDF PROFESIONAL generado: recibo_' + receiptNumber + '.pdf');
+      const receiptNumber = (nro || '000001').replace(/[^\d]/g, '').padStart(6, '0');
+
+      // Abrir en nueva ventana para imprimir directamente
+      const url = URL.createObjectURL(blob);
+      const printWindow = window.open(url, '_blank');
+
+      // Cuando se carga el PDF, abrir diálogo de impresión
+      if (printWindow) {
+        printWindow.onload = function() {
+          printWindow.print();
+        };
+      }
+
+      // Limpiar URL después de un tiempo
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+
+      console.log('✅ PDF PROFESIONAL generado para imprimir: recibo_' + receiptNumber + '.pdf');
 
       // Guardar en Sheets
       const payload = {
@@ -285,7 +289,7 @@ export default function Home() {
               onMouseEnter={(e) => !loading && (e.target.style.backgroundColor = 'rgb(230, 95, 0)')}
               onMouseLeave={(e) => !loading && (e.target.style.backgroundColor = 'rgb(255, 107, 0)')}
             >
-              {loading ? '⏳ Generando PDF...' : '📥 Descargar PDF'}
+              {loading ? '⏳ Generando PDF...' : '🖨️ Imprimir PDF'}
             </button>
 
             {status.message && (

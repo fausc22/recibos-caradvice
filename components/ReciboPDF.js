@@ -5,16 +5,16 @@ const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
-    padding: 20,
+    padding: 40,
     fontFamily: 'Helvetica',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
-    borderBottom: 4,
+    marginBottom: 15,
+    borderBottom: 3,
     borderBottomColor: '#FF6B00',
-    paddingBottom: 15,
+    paddingBottom: 12,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -68,21 +68,21 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   separator: {
-    height: 2,
+    height: 1,
     backgroundColor: '#E0E0E0',
-    marginVertical: 12,
+    marginVertical: 10,
   },
   infoSection: {
-    marginBottom: 12,
+    marginBottom: 8,
   },
   infoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 10,
+    marginBottom: 6,
   },
   infoItem: {
     width: '50%',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   infoLabel: {
     fontSize: 11,
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   conceptSection: {
-    marginVertical: 12,
+    marginVertical: 8,
   },
   conceptLabel: {
     fontSize: 11,
@@ -113,8 +113,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#FF6B00',
     borderRadius: 8,
-    padding: 15,
-    marginVertical: 15,
+    padding: 12,
+    marginVertical: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -132,11 +132,11 @@ const styles = StyleSheet.create({
   detailsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 10,
+    marginTop: 8,
   },
   detailItem: {
     width: '50%',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   detailLabel: {
     fontSize: 11,
@@ -151,14 +151,15 @@ const styles = StyleSheet.create({
   signaturesSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 60,
-    marginBottom: 20,
+    marginTop: 80,
+    marginBottom: 15,
   },
   signatureBox: {
     width: '48%',
     borderTopWidth: 2,
     borderTopColor: '#000000',
-    paddingTop: 8,
+    paddingTop: 12,
+    minHeight: 50,
     alignItems: 'center',
   },
   signatureText: {
@@ -168,13 +169,13 @@ const styles = StyleSheet.create({
   },
   footer: {
     alignItems: 'center',
-    marginTop: 'auto',
-    paddingTop: 20,
+    marginTop: 15,
+    paddingTop: 10,
   },
   footerLogo: {
-    width: 60,
-    height: 60,
-    opacity: 0.5,
+    width: 50,
+    height: 50,
+    opacity: 0.4,
   },
 });
 
@@ -206,8 +207,6 @@ const ReciboPDF = ({ data }) => {
             <View style={styles.companyInfo}>
               <Text style={styles.companyName}>CAR ADVICE</Text>
               <Text style={styles.companyDetailBold}>Casa Central: Octavio Pinto 3024</Text>
-              <Text style={styles.companyDetails}>Suc. Granaderos: Bv. Granaderos 3110</Text>
-              <Text style={styles.companyDetails}>Suc. Caraffa: Av. Caraffa 2883</Text>
               <Text style={styles.companyDetailBold}>☎ 351-515-8848</Text>
             </View>
           </View>
@@ -294,8 +293,8 @@ const ReciboPDF = ({ data }) => {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Image 
-            src="/img/iso_negro.png" 
+          <Image
+            src="/img/iso_negro.png"
             style={styles.footerLogo}
           />
         </View>
