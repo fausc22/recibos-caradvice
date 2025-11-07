@@ -85,7 +85,7 @@ export default function Home() {
   // Obtener próximo número de recibo
   const fetchNextNumber = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/recibos/next-number`);
+      const response = await fetch(`${API_BASE_URL}/recibosCarAdvice/next-number`);
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       
       const data = await response.json();
@@ -111,7 +111,7 @@ export default function Home() {
   // Guardar en Google Sheets
   const saveToSheets = async (payload) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/recibos`, {
+      const response = await fetch(`${API_BASE_URL}/recibosCarAdvice`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
