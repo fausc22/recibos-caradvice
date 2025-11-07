@@ -1,26 +1,261 @@
-@import "tailwindcss";
+/* CSS puro optimizado para máxima claridad y profesionalismo */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: rgb(245, 245, 247);
+  --foreground: rgb(0, 0, 0);
+  --brand: rgb(255, 107, 0);
+  --brand-hover: rgb(230, 95, 0);
+  --brand-light: rgb(255, 237, 224);
+  --line: rgb(220, 220, 220);
+  --ink: rgb(0, 0, 0);
+  --muted: rgb(100, 100, 100);
+  --white: rgb(255, 255, 255);
+  --success: rgb(16, 185, 129);
+  --error: rgb(239, 68, 68);
+  --warning: rgb(245, 158, 11);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Estilos profesionales para el generador de recibos */
+.receipt-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  padding: 24px;
+}
+
+.receipt-preview {
+  border-top: 4px solid var(--brand);
+  background: rgb(255, 255, 255) !important;
+  /* Optimización MÁXIMA para PDF profesional */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  /* Asegurar tamaño adecuado para A4 */
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.receipt-preview * {
+  /* Todos los elementos con renderizado óptimo */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.receipt-preview img {
+  /* Imágenes de máxima calidad */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: high-quality;
+}
+
+.receipt-separator {
+  height: 2px;
+  background: var(--line);
+  margin: 16px 0;
+}
+
+.receipt-amount {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.5px;
+}
+
+.receipt-logo {
+  height: 60px;
+  width: auto;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+.receipt-muted {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+/* Animaciones suaves */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Utilidades de Tailwind reemplazadas con CSS puro */
+.min-h-screen { min-height: 100vh; }
+.p-4 { padding: 1rem; }
+.p-3 { padding: 0.75rem; }
+.px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+.px-4 { padding-left: 1rem; padding-right: 1rem; }
+.py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+.pt-2 { padding-top: 0.5rem; }
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 0.75rem; }
+.mt-4 { margin-top: 1rem; }
+.mt-6 { margin-top: 1.5rem; }
+.mt-16 { margin-top: 4rem; }
+.my-4 { margin-top: 1rem; margin-bottom: 1rem; }
+.gap-3 { gap: 0.75rem; }
+.gap-4 { gap: 1rem; }
+
+.max-w-7xl { max-width: 80rem; margin-left: auto; margin-right: auto; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+
+.w-full { width: 100%; }
+.h-16 { height: 4rem; }
+
+.flex { display: flex; }
+.flex-wrap { flex-wrap: wrap; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.justify-between { justify-content: space-between; }
+
+.grid { display: grid; }
+.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.text-xs { font-size: 0.75rem; line-height: 1rem; }
+.text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+.text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+.text-2xl { font-size: 1.5rem; line-height: 2rem; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+.font-bold { font-weight: 700; }
+.font-semibold { font-weight: 600; }
+.font-medium { font-weight: 500; }
+.font-extrabold { font-weight: 800; }
+
+.rounded-lg { border-radius: 0.5rem; }
+.rounded-xl { border-radius: 0.75rem; }
+.rounded-full { border-radius: 9999px; }
+
+.border { border-width: 1px; }
+.border-t { border-top-width: 1px; }
+.border-gray-300 { border-color: rgb(209, 213, 219); }
+.border-gray-700 { border-color: rgb(55, 65, 81); }
+.border-green-200 { border-color: rgb(187, 247, 208); }
+.border-red-200 { border-color: rgb(254, 202, 202); }
+.border-yellow-200 { border-color: rgb(254, 240, 138); }
+.border-black { border-color: rgb(0, 0, 0); }
+
+.bg-gray-50 { background-color: rgb(250, 250, 250); }
+.bg-gray-900 { background-color: rgb(0, 0, 0); }
+.bg-green-100 { background-color: rgb(209, 250, 229); }
+.bg-red-100 { background-color: rgb(254, 226, 226); }
+.bg-yellow-100 { background-color: rgb(254, 243, 199); }
+
+.text-gray-700 { color: rgb(60, 60, 60); }
+.text-gray-900 { color: rgb(0, 0, 0); }
+.text-green-800 { color: rgb(6, 95, 70); }
+.text-red-800 { color: rgb(153, 27, 27); }
+.text-yellow-800 { color: rgb(146, 64, 14); }
+.text-white { color: rgb(255, 255, 255); }
+
+.shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+.shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+
+.transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+.duration-200 { transition-duration: 200ms; }
+
+.cursor-not-allowed { cursor: not-allowed; }
+
+.opacity-60 { opacity: 0.6; }
+
+.block { display: block; }
+.resize-vertical { resize: vertical; }
+
+button:disabled { opacity: 0.6; cursor: not-allowed; }
+button:hover:not(:disabled) { opacity: 0.9; }
+
+input, select, textarea {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  background-color: var(--white);
+  color: var(--ink);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
+}
+
+input::placeholder, textarea::placeholder {
+  color: rgb(160, 160, 160);
+  opacity: 1;
+}
+
+/* Validación de campos */
+input.invalid, textarea.invalid {
+  border-color: var(--error) !important;
+  background-color: rgba(239, 68, 68, 0.02);
+}
+
+input.valid, textarea.valid {
+  border-color: var(--success) !important;
+}
+
+label {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* Responsive - usando clases sin escape */
+@media (min-width: 768px) {
+  .md-p-6 { padding: 1.5rem; }
+  .md-grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .md-text-2xl { font-size: 1.5rem; line-height: 2rem; }
+  .md-gap-6 { gap: 1.5rem; }
+}
+
+@media (min-width: 1024px) {
+  .lg-grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Print styles */
+@media print {
+  body {
+    background: white;
+  }
+  .no-print {
+    display: none !important;
+  }
 }
