@@ -156,12 +156,7 @@ export default function Home() {
 
       setLoading(true);
 
-      console.log('🎨 Generando PDF PROFESIONAL con react-pdf...');
-
-      // Importar dinámicamente las librerías de PDF (solo en el cliente)
-      const { pdf } = await import('@react-pdf/renderer');
-      const ReciboPDFModule = await import('../components/ReciboPDF');
-      const ReciboPDF = ReciboPDFModule.default;
+      console.log('🎨 Generando PDF profesional desde el backend...');
 
       // Preparar datos para el PDF
       const pdfData = {
@@ -180,8 +175,39 @@ export default function Home() {
         vehiculo
       };
 
-      // Generar PDF VECTORIAL profesional
-      const blob = await pdf(<ReciboPDF data={pdfData} />).toBlob();
+      // Generar PDF desde el backend
+      const response = await fetch(`${API_BASE_URL}/recibosCarAdvice/generate-pdf`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pdfData)
+      });
+
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response headers:', response.headers.get('content-type'));
+
+      if (!response.ok) {
+        // Intentar leer el error como JSON
+        const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
+        console.error('❌ Error del servidor:', errorData);
+        throw new Error(errorData.error || errorData.details || `Error HTTP: ${response.status}`);
+      }
+
+      // Verificar que la respuesta sea un PDF
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/pdf')) {
+        console.error('❌ Respuesta no es un PDF:', contentType);
+        const text = await response.text();
+        console.error('Contenido recibido:', text.substring(0, 200));
+        throw new Error('La respuesta del servidor no es un PDF válido');
+      }
+
+      // Obtener el PDF como blob
+      const blob = await response.blob();
+      console.log('📦 Blob recibido, tamaño:', blob.size, 'bytes');
+      
+      if (blob.size === 0) {
+        throw new Error('El PDF recibido está vacío');
+      }
 
       const receiptNumber = (nro || '000001').replace(/[^\d]/g, '').padStart(6, '0');
 
