@@ -225,7 +225,7 @@ export default function Home() {
       // Limpiar URL después de un tiempo
       setTimeout(() => URL.revokeObjectURL(url), 60000);
 
-      console.log('✅ PDF PROFESIONAL generado para imprimir: recibo_' + receiptNumber + '.pdf');
+      console.log('✅ PDF PROFESIONAL generado para imprimir: RECIBO ' + receiptNumber + ' - CAR ADVICE.pdf');
 
       // Guardar en Sheets
       const payload = {
