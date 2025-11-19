@@ -681,8 +681,6 @@ export default function Home() {
                   </div>
                   <div className="receipt-muted" style={{marginTop: '4px'}}>
                     <div style={{fontWeight: '500'}}>Casa Central: Octavio Pinto 3024</div>
-                    <div>Suc. Granaderos: Bv. Granaderos 3110</div>
-                    <div>Suc. Caraffa: Av. Caraffa 2883</div>
                     <div style={{fontWeight: '500', color: 'rgb(255, 107, 0)'}}>☎ 351-515-8848</div>
                   </div>
                 </div>
