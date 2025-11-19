@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Home() {
   // Estados del formulario
@@ -12,10 +12,10 @@ export default function Home() {
   const [doc, setDoc] = useState('');
   const [direccion, setDireccion] = useState('');
   const [concepto, setConcepto] = useState('');
-  const [moneda, setMoneda] = useState('ARS');
-  const [monto, setMonto] = useState('0');
-  const [medio, setMedio] = useState('Efectivo');
-  const [detalles, setDetalles] = useState('');
+  // Formas de pago (array de objetos)
+  const [formasPago, setFormasPago] = useState([
+    { medio: 'Efectivo', moneda: 'ARS', monto: '0', detalles: '' }
+  ]);
   const [vendedor, setVendedor] = useState('');
   const [vehiculo, setVehiculo] = useState('');
 
@@ -73,6 +73,80 @@ export default function Home() {
       ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
       : new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
     return formatter.format(parseFloat(amount) || 0);
+  };
+
+  // Calcular totales separados por moneda
+  const calcularTotales = () => {
+    return formasPago.reduce((totales, fp) => {
+      const monto = parseFloat(fp.monto) || 0;
+      if (fp.moneda === 'USD') {
+        totales.usd += monto;
+      } else {
+        totales.ars += monto;
+      }
+      return totales;
+    }, { ars: 0, usd: 0 });
+  };
+
+  // Función de compatibilidad (devuelve el total mayor o ARS si ambos son 0)
+  const calcularTotal = () => {
+    const totales = calcularTotales();
+    return totales.ars + totales.usd; // Para validaciones, pero no se usa para mostrar
+  };
+
+  // Agregar nueva forma de pago
+  const agregarFormaPago = () => {
+    setFormasPago([...formasPago, { medio: 'Efectivo', moneda: 'ARS', monto: '0', detalles: '' }]);
+  };
+
+  // Eliminar forma de pago
+  const eliminarFormaPago = (index) => {
+    if (formasPago.length > 1) {
+      setFormasPago(formasPago.filter((_, i) => i !== index));
+    }
+  };
+
+  // Actualizar forma de pago
+  const actualizarFormaPago = (index, campo, valor) => {
+    const nuevasFormas = [...formasPago];
+    nuevasFormas[index] = { ...nuevasFormas[index], [campo]: valor };
+    setFormasPago(nuevasFormas);
+  };
+
+  // Obtener fecha actual en zona horaria de Argentina (UTC-3)
+  const getFechaArgentina = () => {
+    const now = new Date();
+    // Argentina está en UTC-3 (sin horario de verano desde 2009)
+    const argentinaOffset = -3 * 60; // -3 horas en minutos
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const argentinaTime = new Date(utc + (argentinaOffset * 60000));
+    
+    const year = argentinaTime.getUTCFullYear();
+    const month = String(argentinaTime.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(argentinaTime.getUTCDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+  };
+
+  // Obtener timestamp ISO en zona horaria de Argentina
+  const getTimestampArgentina = () => {
+    const now = new Date();
+    // Argentina está en UTC-3 (sin horario de verano desde 2009)
+    const argentinaOffset = -3 * 60; // -3 horas en minutos
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const argentinaTime = new Date(utc + (argentinaOffset * 60000));
+    
+    // Formatear como ISO string pero ajustado a Argentina
+    const year = argentinaTime.getUTCFullYear();
+    const month = String(argentinaTime.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(argentinaTime.getUTCDate()).padStart(2, '0');
+    const hours = String(argentinaTime.getUTCHours()).padStart(2, '0');
+    const minutes = String(argentinaTime.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(argentinaTime.getUTCSeconds()).padStart(2, '0');
+    const milliseconds = String(argentinaTime.getUTCMilliseconds()).padStart(3, '0');
+    
+    // Retornar como ISO string pero representando la hora de Argentina
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}Z`;
   };
 
   // Formatear fecha DD/MM/YYYY
@@ -148,9 +222,20 @@ export default function Home() {
         return;
       }
 
-      const montoValue = parseFloat(monto);
-      if (!monto || isNaN(montoValue) || montoValue <= 0) {
-        showStatus('Por favor ingresa un monto válido mayor a 0', 'error');
+      // Validar que al menos una forma de pago tenga monto > 0
+      const totales = calcularTotales();
+      if (totales.ars <= 0 && totales.usd <= 0) {
+        showStatus('Por favor ingresa al menos una forma de pago con monto mayor a 0', 'error');
+        return;
+      }
+
+      // Validar que todas las formas de pago tengan montos válidos
+      const formasInvalidas = formasPago.some(fp => {
+        const monto = parseFloat(fp.monto);
+        return isNaN(monto) || monto < 0;
+      });
+      if (formasInvalidas) {
+        showStatus('Por favor revisa los montos ingresados', 'error');
         return;
       }
 
@@ -158,7 +243,7 @@ export default function Home() {
 
       console.log('🎨 Generando PDF profesional desde el backend...');
 
-      // Preparar datos para el PDF
+      // Preparar datos para el PDF (reutilizar totales ya calculados en validación)
       const pdfData = {
         nro,
         fecha,
@@ -167,10 +252,9 @@ export default function Home() {
         doc,
         direccion,
         concepto,
-        moneda,
-        monto,
-        medio,
-        detalles,
+        totalARS: totales.ars,
+        totalUSD: totales.usd,
+        formasPago: formasPago.filter(fp => parseFloat(fp.monto) > 0), // Solo incluir formas con monto > 0
         vendedor,
         vehiculo
       };
@@ -227,7 +311,7 @@ export default function Home() {
 
       console.log('✅ PDF PROFESIONAL generado para imprimir: RECIBO ' + receiptNumber + ' - CAR ADVICE.pdf');
 
-      // Guardar en Sheets
+      // Guardar en Sheets (reutilizar totales ya calculados)
       const payload = {
         nro,
         fecha,
@@ -236,13 +320,12 @@ export default function Home() {
         doc,
         direccion,
         concepto,
-        moneda,
-        monto,
-        medio,
-        detalles,
+        totalARS: totales.ars,
+        totalUSD: totales.usd,
+        formasPago: formasPago.filter(fp => parseFloat(fp.monto) > 0),
         vendedor,
         vehiculo,
-        ts: new Date().toISOString()
+        ts: getTimestampArgentina()
       };
 
       const saved = await saveToSheets(payload);
@@ -275,7 +358,7 @@ export default function Home() {
 
   // Inicialización
   useEffect(() => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getFechaArgentina();
     setFecha(today);
     
     showStatus('Conectando con el servidor...', 'warning');
@@ -283,11 +366,11 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen p-4 md-p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg-grid-cols-2 gap-4 md-gap-6">
+    <div className="min-h-screen p-4 md-p-6" style={{width: '100%', boxSizing: 'border-box'}}>
+      <div className="max-w-7xl mx-auto" style={{width: '100%', maxWidth: '100%', boxSizing: 'border-box'}}>
+        <div className="grid grid-cols-1 lg-grid-cols-2 gap-4 md-gap-6" style={{width: '100%', boxSizing: 'border-box'}}>
           {/* Formulario */}
-          <div className="receipt-card no-print animate-fade-in">
+          <div className="receipt-card no-print animate-fade-in" style={{width: '100%', maxWidth: '100%', boxSizing: 'border-box'}}>
             <div className="flex items-center gap-3 mb-4">
               <Image src="/img/iso_negro.png" alt="Car Advice" width={40} height={40} />
               <h2 className="text-xl md-text-2xl font-bold text-[var(--brand)]">
@@ -408,60 +491,144 @@ export default function Home() {
               />
             </div>
 
-            <div className="grid grid-cols-1 md-grid-cols-2 gap-3 mt-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Moneda</label>
-                <select
-                  value={moneda}
-                  onChange={(e) => setMoneda(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                >
-                  <option value="ARS">ARS</option>
-                  <option value="USD">USD</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Monto * {errors.monto && touched.monto && <span style={{color: 'rgb(239, 68, 68)', fontSize: '11px'}}>({errors.monto})</span>}
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-medium text-gray-700">
+                  Formas de Pago *
                 </label>
-                <input
-                  type="number"
-                  value={monto}
-                  onChange={(e) => handleChange('monto', e.target.value, setMonto)}
-                  onBlur={(e) => handleBlur('monto', e.target.value)}
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  className={getInputClass('monto', "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm")}
-                  style={{fontSize: '14px', fontWeight: '500'}}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md-grid-cols-2 gap-3 mt-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Medio de pago</label>
-                <select
-                  value={medio}
-                  onChange={(e) => setMedio(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                <button
+                  type="button"
+                  onClick={agregarFormaPago}
+                  style={{
+                    backgroundColor: 'rgb(255, 107, 0)',
+                    color: 'white',
+                    fontWeight: '600',
+                    padding: '10px 14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    fontSize: '13px',
+                    boxShadow: '0 2px 4px rgba(255, 107, 0, 0.2)'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(230, 95, 0)'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(255, 107, 0)'}
                 >
-                  <option>Efectivo</option>
-                  <option>Transferencia</option>
-                  <option>Tarjeta</option>
-                  <option>Cheque</option>
-                  <option>Pagaré</option>
-                </select>
+                  + Agregar forma de pago
+                </button>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Detalles del pago</label>
-                <input
-                  type="text"
-                  value={detalles}
-                  onChange={(e) => setDetalles(e.target.value)}
-                  placeholder="CBU/Alias, banco, cuotas, etc."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                />
+              
+              {formasPago.map((fp, index) => (
+                <div key={index} className="mb-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                  <div className="flex items-start justify-between mb-2">
+                    <span className="text-xs font-semibold text-gray-600">
+                      Forma de pago #{index + 1}
+                    </span>
+                    {formasPago.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => eliminarFormaPago(index)}
+                        style={{
+                          backgroundColor: 'rgb(239, 68, 68)',
+                          color: 'white',
+                          fontWeight: '600',
+                          padding: '8px 12px',
+                          borderRadius: '10px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          fontSize: '12px',
+                          boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)'
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(220, 38, 38)'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(239, 68, 68)'}
+                      >
+                        ✕ Eliminar
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md-grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Medio</label>
+                      <select
+                        value={fp.medio}
+                        onChange={(e) => actualizarFormaPago(index, 'medio', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      >
+                        <option>Efectivo</option>
+                        <option>Transferencia</option>
+                        <option>Tarjeta</option>
+                        <option>Cheque</option>
+                        <option>Pagaré</option>
+                        <option>Otro</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Moneda</label>
+                      <select
+                        value={fp.moneda}
+                        onChange={(e) => actualizarFormaPago(index, 'moneda', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      >
+                        <option value="ARS">ARS</option>
+                        <option value="USD">USD</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md-grid-cols-2 gap-2 mt-2">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Monto</label>
+                      <input
+                        type="number"
+                        value={fp.monto}
+                        onChange={(e) => actualizarFormaPago(index, 'monto', e.target.value)}
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        style={{fontSize: '14px', fontWeight: '500'}}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Detalles</label>
+                      <input
+                        type="text"
+                        value={fp.detalles}
+                        onChange={(e) => actualizarFormaPago(index, 'detalles', e.target.value)}
+                        placeholder="CBU/Alias, banco, cuotas, etc."
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                {(() => {
+                  const totales = calcularTotales();
+                  return (
+                    <div className="space-y-1">
+                      {totales.ars > 0 && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-semibold text-gray-700">Total ARS:</span>
+                          <span className="text-sm font-bold text-blue-700">
+                            {formatCurrency(totales.ars, 'ARS')}
+                          </span>
+                        </div>
+                      )}
+                      {totales.usd > 0 && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-semibold text-gray-700">Total USD:</span>
+                          <span className="text-sm font-bold text-blue-700">
+                            {formatCurrency(totales.usd, 'USD')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
@@ -492,7 +659,11 @@ export default function Home() {
           <div ref={previewRef} className="receipt-card receipt-preview animate-fade-in" style={{
             backgroundColor: 'rgb(255, 255, 255)',
             minHeight: '1000px',
-            padding: '32px'
+            padding: '32px',
+            width: '100%',
+            maxWidth: '100%',
+            boxSizing: 'border-box',
+            overflow: 'auto'
           }}>
             <div className="flex justify-between items-start gap-4 flex-wrap">
               <div className="flex gap-3 items-center">
@@ -558,41 +729,130 @@ export default function Home() {
               <span style={{marginLeft: '4px', color: 'rgb(0, 0, 0)'}}>{concepto || '__________'}</span>
             </div>
 
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              backgroundColor: 'rgb(255, 247, 237)',
-              border: '2px solid rgb(255, 107, 0)',
-              borderRadius: '12px',
-              padding: '16px',
-              marginTop: '12px',
-              marginBottom: '12px'
-            }}>
-              <div style={{fontSize: '14px', fontWeight: '600', color: 'rgb(255, 107, 0)'}}>
-                IMPORTE TOTAL
-              </div>
-              <div style={{fontSize: '32px', fontWeight: '800', color: 'rgb(255, 107, 0)', letterSpacing: '-1px'}}>
-                {formatCurrency(monto, moneda)}
-              </div>
-            </div>
+            {(() => {
+              const totales = calcularTotales();
+              const tieneARS = totales.ars > 0;
+              const tieneUSD = totales.usd > 0;
+              
+              if (tieneARS && tieneUSD) {
+                // Mostrar ambos totales
+                return (
+                  <>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      backgroundColor: 'rgb(255, 247, 237)',
+                      border: '2px solid rgb(255, 107, 0)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      marginTop: '12px',
+                      marginBottom: '8px'
+                    }}>
+                      <div style={{fontSize: '14px', fontWeight: '600', color: 'rgb(255, 107, 0)'}}>
+                        IMPORTE TOTAL ARS
+                      </div>
+                      <div style={{fontSize: '28px', fontWeight: '800', color: 'rgb(255, 107, 0)', letterSpacing: '-1px'}}>
+                        {formatCurrency(totales.ars, 'ARS')}
+                      </div>
+                    </div>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      backgroundColor: 'rgb(255, 247, 237)',
+                      border: '2px solid rgb(255, 107, 0)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      marginBottom: '12px'
+                    }}>
+                      <div style={{fontSize: '14px', fontWeight: '600', color: 'rgb(255, 107, 0)'}}>
+                        IMPORTE TOTAL USD
+                      </div>
+                      <div style={{fontSize: '28px', fontWeight: '800', color: 'rgb(255, 107, 0)', letterSpacing: '-1px'}}>
+                        {formatCurrency(totales.usd, 'USD')}
+                      </div>
+                    </div>
+                  </>
+                );
+              } else if (tieneARS) {
+                // Solo ARS
+                return (
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    backgroundColor: 'rgb(255, 247, 237)',
+                    border: '2px solid rgb(255, 107, 0)',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    marginTop: '12px',
+                    marginBottom: '12px'
+                  }}>
+                    <div style={{fontSize: '14px', fontWeight: '600', color: 'rgb(255, 107, 0)'}}>
+                      IMPORTE TOTAL ARS
+                    </div>
+                    <div style={{fontSize: '32px', fontWeight: '800', color: 'rgb(255, 107, 0)', letterSpacing: '-1px'}}>
+                      {formatCurrency(totales.ars, 'ARS')}
+                    </div>
+                  </div>
+                );
+              } else if (tieneUSD) {
+                // Solo USD
+                return (
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    backgroundColor: 'rgb(255, 247, 237)',
+                    border: '2px solid rgb(255, 107, 0)',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    marginTop: '12px',
+                    marginBottom: '12px'
+                  }}>
+                    <div style={{fontSize: '14px', fontWeight: '600', color: 'rgb(255, 107, 0)'}}>
+                      IMPORTE TOTAL USD
+                    </div>
+                    <div style={{fontSize: '32px', fontWeight: '800', color: 'rgb(255, 107, 0)', letterSpacing: '-1px'}}>
+                      {formatCurrency(totales.usd, 'USD')}
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
 
             <div className="receipt-separator"></div>
 
-            <div className="grid grid-cols-2 gap-4" style={{fontSize: '14px'}}>
-              <div>
-                <b style={{color: 'rgb(255, 107, 0)', fontWeight: '600', display: 'block', marginBottom: '4px'}}>
-                  Medio de pago
+            {/* Desglose de formas de pago */}
+            {formasPago.filter(fp => parseFloat(fp.monto) > 0).length > 0 && (
+              <div style={{marginBottom: '12px'}}>
+                <b style={{color: 'rgb(255, 107, 0)', fontWeight: '600', display: 'block', marginBottom: '8px', fontSize: '14px'}}>
+                  Desglose de formas de pago:
                 </b>
-                <span style={{color: 'rgb(0, 0, 0)', fontWeight: '500'}}>{medio}</span>
+                <div style={{fontSize: '13px'}}>
+                  {formasPago
+                    .filter(fp => parseFloat(fp.monto) > 0)
+                    .map((fp, index) => (
+                      <div key={index} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        padding: '6px 0',
+                        borderBottom: index < formasPago.filter(f => parseFloat(f.monto) > 0).length - 1 ? '1px solid rgb(230, 230, 230)' : 'none'
+                      }}>
+                        <span style={{color: 'rgb(0, 0, 0)'}}>
+                          {fp.medio} {fp.moneda === 'USD' ? '(USD)' : '(ARS)'}
+                          {fp.detalles && <span style={{color: 'rgb(100, 100, 100)', fontSize: '12px'}}> — {fp.detalles}</span>}
+                        </span>
+                        <span style={{color: 'rgb(0, 0, 0)', fontWeight: '500'}}>
+                          {formatCurrency(fp.monto, fp.moneda)}
+                        </span>
+                      </div>
+                    ))}
+                </div>
               </div>
-              <div>
-                <b style={{color: 'rgb(255, 107, 0)', fontWeight: '600', display: 'block', marginBottom: '4px'}}>
-                  Detalles
-                </b>
-                <span style={{color: 'rgb(0, 0, 0)'}}>{detalles || '-'}</span>
-              </div>
-            </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4 mt-3" style={{fontSize: '14px'}}>
               <div>
