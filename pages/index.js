@@ -159,7 +159,7 @@ export default function Home() {
   // Obtener próximo número de recibo
   const fetchNextNumber = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/recibosCarAdvice/next-number`);
+      const response = await fetch(`${API_BASE_URL}/api/recibos/next-number`);
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       
       const data = await response.json();
@@ -185,7 +185,7 @@ export default function Home() {
   // Guardar en Google Sheets
   const saveToSheets = async (payload) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/recibosCarAdvice`, {
+      const response = await fetch(`${API_BASE_URL}/api/recibos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -254,13 +254,18 @@ export default function Home() {
         concepto,
         totalARS: totales.ars,
         totalUSD: totales.usd,
-        formasPago: formasPago.filter(fp => parseFloat(fp.monto) > 0), // Solo incluir formas con monto > 0
+        formasPago: formasPago.filter(fp => parseFloat(fp.monto) > 0).map(fp => ({
+          medio: fp.medio,
+          moneda: fp.moneda,
+          monto: parseFloat(fp.monto),
+          detalles: fp.detalles || ''
+        })),
         vendedor,
         vehiculo
       };
 
       // Generar PDF desde el backend
-      const response = await fetch(`${API_BASE_URL}/recibosCarAdvice/generate-pdf`, {
+      const response = await fetch(`${API_BASE_URL}/api/recibos/generate-pdf`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(pdfData)
@@ -322,10 +327,14 @@ export default function Home() {
         concepto,
         totalARS: totales.ars,
         totalUSD: totales.usd,
-        formasPago: formasPago.filter(fp => parseFloat(fp.monto) > 0),
+        formasPago: formasPago.filter(fp => parseFloat(fp.monto) > 0).map(fp => ({
+          medio: fp.medio,
+          moneda: fp.moneda,
+          monto: parseFloat(fp.monto),
+          detalles: fp.detalles || ''
+        })),
         vendedor,
-        vehiculo,
-        ts: getTimestampArgentina()
+        vehiculo
       };
 
       const saved = await saveToSheets(payload);
